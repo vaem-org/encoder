@@ -1,0 +1,65 @@
+{
+    "240": [
+	{
+        "vf": "scale=240:trunc(ow/a/2)*2",
+        "b:a": "32k",
+        "b:v": "118k",
+		"maxrate": "150k",
+		"bufsize": "150k"
+    }],
+	"320": [
+    {
+        "vf": "scale=320:trunc(ow/a/2)*2",
+        "b:a": "64k",
+        "b:v": "236k",
+		"maxrate": "300k",
+		"bufsize": "300k"
+    }],
+	"640": [
+    {
+        "vf": "scale=640:trunc(ow/a/2)*2",
+        "b:a": "96k",
+        "b:v": "504k",
+		"maxrate": "600k",
+		"bufsize": "600k"
+    },
+    {
+        "vf": "scale=640:trunc(ow/a/2)*2",
+        "b:a": "128k",
+        "b:v": "772k",
+		"maxrate": "900k",
+		"bufsize": "900k"
+    }],
+
+	"720": [
+    {
+        "vf": "scale=1280:trunc(ow/a/2)*2",
+        "b:a": "128k",
+        "b:v": "1372k",
+		"maxrate": "1500k",
+		"bufsize": "1500k"
+    },
+    {
+        "vf": "scale=1280:trunc(ow/a/2)*2",
+        "b:a": "128k",
+        "b:v": "2072k",
+		"maxrate": "2200k",
+		"bufsize": "2200k"
+    },
+    {
+        "vf": "scale=1280:trunc(ow/a/2)*2",
+        "b:a": "128k",
+        "b:v": "3472k",
+		"maxrate": "3600k",
+		"bufsize": "3600k"
+    }],
+
+	"1920": [
+    {
+        "vf": "scale=1920:trunc(ow/a/2)*2",
+        "b:a": "128k",
+        "b:v": "5372k",
+		"maxrate": "5500k",
+		"bufsize": "5500k"
+    }]
+}

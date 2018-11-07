@@ -1,0 +1,13 @@
+# Created by .ignore support plugin (hsz.mobi)
+output
+.idea
+*.log
+*.log.mbtree
+.DS_Store
+*.log.mbtree.temp
+*.log.temp
+tmp/
+node_modules
+config/local.js
+docker-compose.override.yml
+.env

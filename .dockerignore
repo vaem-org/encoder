@@ -1,0 +1,6 @@
+node_modules
+.idea
+config/local.js
+output
+tmp
+.env
