@@ -100,6 +100,9 @@ module.exports = app => {
         'seekable': job.options.seekable
       } : {}, {
         'ss': job.options.ss || null,
+        ...(config.assetManager.auth ? {
+          'headers': `Authorization: Basic ${Buffer.from(`${config.assetManager.auth.username}:${config.assetManager.auth.password}`).toString('base64')}`
+        } : {}),
         'i': source,
         'y': true,
         'loglevel': 'error',
@@ -161,7 +164,10 @@ module.exports = app => {
           console.log(`Uploading ${config.assetManager.url}${destinationPrefix}/${path.basename(file)}`);
           await rp(`${config.assetManager.url}${destinationPrefix}/${path.basename(file)}`, {
             method: 'PUT',
-            auth: config.assetManager.auth,
+            auth: {
+              ...config.assetManager.auth,
+              sendImmediately: true
+            },
             body: fse.createReadStream(file)
           });
         }));
