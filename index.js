@@ -19,7 +19,6 @@
 require('dotenv').config();
 
 const config = require('./config/config');
-const child_process = require('child_process');
 const fs = require('fs-extra');
 const os = require('os');
 const Tail = require('tail').Tail;

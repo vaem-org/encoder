@@ -100,9 +100,6 @@ module.exports = app => {
         'seekable': job.options.seekable
       } : {}, {
         'ss': job.options.ss || null,
-        ...(config.assetManager.auth ? {
-          'headers': `Authorization: Basic ${Buffer.from(`${config.assetManager.auth.username}:${config.assetManager.auth.password}`).toString('base64')}`
-        } : {}),
         'i': source,
         'y': true,
         'loglevel': 'error',
