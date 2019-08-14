@@ -174,7 +174,7 @@ module.exports = app => {
       }
 
       if (job.hlsEncKey) {
-        await fse.writeFile(`${tmpDir}/file.key`, new Buffer(job.hlsEncKey, 'hex'));
+        await fse.writeFile(`${tmpDir}/file.key`, Buffer.from(job.hlsEncKey, 'hex'));
       }
 
       app.socket.emit('m3u8', {

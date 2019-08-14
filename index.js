@@ -50,7 +50,6 @@ socket.on('connect', () => {
     socket.emit('info', {
       ip: ip,
       cpus: os.cpus(),
-      commit: child_process.execSync('git rev-parse --short HEAD').toString().replace('\n', ''),
       hostname: os.hostname(),
       priority: parseInt(process.env.PRIORITY) || config.priority || 0
     });
