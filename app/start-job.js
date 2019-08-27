@@ -161,11 +161,8 @@ module.exports = app => {
           console.log(`Uploading ${config.assetManager.url}${destinationPrefix}/${path.basename(file)}`);
           await rp(`${config.assetManager.url}${destinationPrefix}/${path.basename(file)}`, {
             method: 'PUT',
-            auth: {
-              ...config.assetManager.auth,
-              sendImmediately: true
-            },
-            body: fse.createReadStream(file)
+            body: fse.createReadStream(file),
+            auth: config.assetManager.auth
           });
         }));
       }
