@@ -34,7 +34,9 @@ let encoderId = null;
 const app = {};
 app.config = config;
 
-socket = app.socket = require('socket.io-client')(`${config.assetManager.url}/encoder`);
+socket = app.socket = require('socket.io-client')(`${config.assetManager.parsedUrl.origin}/encoder`, {
+  path: config.assetManager.parsedUrl.pathname + (config.assetManager.parsedUrl.pathname.endsWith('/') ? '' : '/')+ 'socket.io'
+});
 socket.on('connect', () => {
   console.log('Connected to asset manager');
 

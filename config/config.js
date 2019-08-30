@@ -37,7 +37,8 @@ if (process.env.ASSETMANAGER_URL) {
       username: parsed.username,
       password: parsed.password,
       sendImmediately: true
-    }
+    },
+    parsedUrl: parsed
   }
 }
 
