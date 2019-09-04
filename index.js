@@ -21,7 +21,7 @@ require('dotenv').config();
 const config = require('./config/config');
 const fs = require('fs-extra');
 const os = require('os');
-const Tail = require('tail').Tail;
+const { Tail } = require('tail');
 const _ = require('lodash');
 
 let socket = false;
@@ -57,8 +57,11 @@ socket.on('connect', () => {
   });
 });
 
+let tail = null;
+
 socket.on('quit', () => {
   socket.disconnect();
+  tail.unwatch();
 });
 
 app.updateCurrentlyProcessing = data => {
@@ -85,13 +88,13 @@ app.initializeWatchers = async () => {
     return;
   }
 
-  const filename = `${config.root}/tmp/${config.instancePrefix}progress.log`;
+  const filename = `${config.root}/tmp/progress.log`;
 
   if (!await fs.exists(filename)) {
     await fs.writeFile(filename, '');
   }
 
-  const tail = new Tail(filename);
+  tail = new Tail(filename);
 
   tail.on('line', data => {
     const result = /^out_time_ms=([0-9]+)$/.exec(data);
@@ -113,18 +116,13 @@ app.initializeWatchers = async () => {
   watchersInitialized = config.instancePrefix;
 };
 
-if (fs.existsSync(`${config.root}/tmp/${config.instancePrefix}progress.log`)) {
+if (fs.existsSync(`${config.root}/tmp/progress.log`)) {
   app.initializeWatchers()
     .catch(e => console.error(e));
 }
 
 if (!fs.existsSync(`${config.root}/tmp`)) {
-  fs.mkdir(`${config.root}/tmp`, err => {
-    if (err) {
-      console.error(err);
-      process.exit(1);
-    }
-  });
+  fs.mkdirSync(`${config.root}/tmp`);
 }
 
 require('./app/start-job')(app);

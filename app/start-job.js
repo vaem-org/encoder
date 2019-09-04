@@ -104,7 +104,7 @@ module.exports = app => {
         'y': true,
         'loglevel': 'error',
         'threads': 0,
-        'progress': `${app.config.root}/tmp/${app.config.instancePrefix}progress.log`,
+        'progress': `${app.config.root}/tmp/progress.log`,
 
       }, _.omit(job.options, ['ss', 'seekable']), {
         'f': 'hls',
