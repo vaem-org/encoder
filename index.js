@@ -57,6 +57,10 @@ socket.on('connect', () => {
   });
 });
 
+socket.on('quit', () => {
+  socket.disconnect();
+});
+
 app.updateCurrentlyProcessing = data => {
   try {
     socket.emit('currently-processing', _.extend(data, {
