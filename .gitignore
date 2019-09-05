@@ -8,6 +8,5 @@ output
 *.log.temp
 tmp/
 node_modules
-config/local.js
 docker-compose.override.yml
 .env

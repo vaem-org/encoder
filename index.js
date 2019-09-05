@@ -23,6 +23,7 @@ const fs = require('fs-extra');
 const os = require('os');
 const { Tail } = require('tail');
 const _ = require('lodash');
+const { fileSystemFromURL } = require('@vaem/filesystem');
 
 let socket = false;
 const ip = false;
@@ -37,14 +38,22 @@ app.config = config;
 socket = app.socket = require('socket.io-client')(`${config.assetManager.parsedUrl.origin}/encoder`, {
   path: config.assetManager.parsedUrl.pathname + (config.assetManager.parsedUrl.pathname.endsWith('/') ? '' : '/')+ 'socket.io'
 });
+
 socket.on('connect', () => {
   console.log('Connected to asset manager');
 
   socket.emit('request-encoder-id', {
-    encoderId: encoderId
+    encoderId: encoderId,
+    token: config.assetManager.parsedUrl.username
   }, data => {
+    if (!data) {
+      console.error('Access denied');
+      process.exit(1);
+    }
+
     encoderId = data.encoderId;
     config.instancePrefix = `encoder.${encoderId}.`;
+    config.destinationFileSystem = data.destinationFileSystem ? fileSystemFromURL(data.destinationFileSystem) : null;
 
     console.log(`Using encoder id: ${data.encoderId}`);
 

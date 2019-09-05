@@ -158,12 +158,28 @@ module.exports = app => {
 
       for (let chunk of _.chunk(files, 4)) {
         await Promise.all(chunk.map(async file => {
-          console.log(`Uploading ${config.assetManager.url}${destinationPrefix}/${path.basename(file)}`);
-          await rp(`${config.assetManager.url}${destinationPrefix}/${path.basename(file)}`, {
-            method: 'PUT',
-            body: fse.createReadStream(file),
-            auth: config.assetManager.auth
-          });
+
+          if (config.destinationFileSystem) {
+            const dirname = path.basename(path.dirname(file));
+            console.log(`Uploading '${dirname}/${path.basename(file)}' to filesystem`)
+            const { stream } = await config.destinationFileSystem.write(`${dirname}/${path.basename(file)}`);
+            await (new Promise((accept, reject) => {
+              const input = fse.createReadStream(file)
+                .on('end', accept)
+                .on('error', reject)
+
+              stream.on('error', reject);
+              input.pipe(stream);
+            }));
+          } else {
+            console.log(`Uploading ${config.assetManager.url}${destinationPrefix}/${path.basename(file)}`);
+            await rp(`${config.assetManager.url}${destinationPrefix}/${path.basename(file)}`, {
+              method: 'PUT',
+              body: fse.createReadStream(file),
+              auth: config.assetManager.auth
+            });
+          }
+
         }));
       }
 

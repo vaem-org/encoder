@@ -16,20 +16,19 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-require('dotenv').config();
+require('dotenv').config()
 
-const _ = require('lodash');
-const fs = require('fs');
-const path = require('path');
+const _ = require('lodash')
+const path = require('path')
 
-const {URL} = require('url');
+const { URL } = require('url')
 
 assetManager = {
   url: 'http://localhost:1234/'
-};
+}
 
 if (process.env.ASSETMANAGER_URL) {
-  const parsed = new URL(process.env.ASSETMANAGER_URL);
+  const parsed = new URL(process.env.ASSETMANAGER_URL)
 
   assetManager = {
     url: _.trim(`${parsed.protocol}//${parsed.host}${parsed.pathname}`, '/'),
@@ -43,19 +42,12 @@ if (process.env.ASSETMANAGER_URL) {
 }
 
 const config = {
-  global: {
-    assetManager: assetManager,
-    root: path.dirname(__dirname),
-    source: false
-  },
-  production:
-    {},
-  development:
-    {}
-};
+  assetManager,
 
-module.exports = _.extend(
-  config.global,
-  config[process.env.NODE_ENV || 'development'] || {},
-  fs.existsSync(`${__dirname}/local.js`) ? require(`${__dirname}/local.js`) : {}
-);
+  root: path.dirname(__dirname),
+  source: false,
+
+  destinationFileSystem: null
+}
+
+module.exports = config;
