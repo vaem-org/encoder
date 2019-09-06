@@ -160,7 +160,7 @@ module.exports = app => {
         await Promise.all(chunk.map(async file => {
 
           if (config.destinationFileSystem) {
-            const dirname = path.basename(path.dirname(file));
+            const dirname = path.basename(destinationPrefix);
             console.log(`Uploading '${dirname}/${path.basename(file)}' to filesystem`)
             const { stream } = await config.destinationFileSystem.write(`${dirname}/${path.basename(file)}`);
             await (new Promise((accept, reject) => {
