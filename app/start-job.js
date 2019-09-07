@@ -70,14 +70,17 @@ const ffprobe = filename => new Promise((accept, reject) => {
 
 async function upload(source, destination) {
   const { stream } = await config.destinationFileSystem.write(destination);
-  await (new Promise((accept, reject) => {
+  return new Promise((accept, reject) => {
     const input = fse.createReadStream(source)
-      .on('end', accept)
       .on('error', reject);
 
-    stream.on('error', reject);
+    stream
+      .on('error', reject)
+      .on('end', accept)
+    ;
+
     input.pipe(stream);
-  }));
+  });
 }
 
 module.exports = app => {
