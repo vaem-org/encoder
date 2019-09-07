@@ -68,6 +68,18 @@ const ffprobe = filename => new Promise((accept, reject) => {
   });
 });
 
+async function upload(source, destination) {
+  const { stream } = await config.destinationFileSystem.write(destination);
+  await (new Promise((accept, reject) => {
+    const input = fse.createReadStream(source)
+      .on('end', accept)
+      .on('error', reject);
+
+    stream.on('error', reject);
+    input.pipe(stream);
+  }));
+}
+
 module.exports = app => {
   let child = null;
 
@@ -136,41 +148,50 @@ module.exports = app => {
       status: 'running'
     });
 
-    child.on('close', async code => {
-      child = null;
-      console.log('Child process ended');
+    child.on('close', code => {
+      (async () => {
+        child = null;
+        console.log('Child process ended');
 
-      if (code !== 0) {
-        console.log('ffmpeg failed');
+        if (code !== 0) {
+          console.log('ffmpeg failed');
+          app.socket.emit('state', {
+            status: 'error'
+          });
+          return;
+        }
+
         app.socket.emit('state', {
-          status: 'error'
+          status: 'idle'
         });
-        return;
-      }
 
-      app.socket.emit('state', {
-        status: 'idle'
-      });
+        // upload segments
+        const files = await glob(`${tmpDir}/*`, {nodir: true});
+        const destinationPrefix = path.dirname(job.m3u8);
 
-      // upload segments
-      const files = await glob(`${tmpDir}/*`, {nodir: true});
-      const destinationPrefix = path.dirname(job.m3u8);
-
-      for (let chunk of _.chunk(files, 4)) {
-        await Promise.all(chunk.map(async file => {
-
+        for(let file of files) {
           if (config.destinationFileSystem) {
             const dirname = path.basename(destinationPrefix);
-            console.log(`Uploading '${dirname}/${path.basename(file)}' to filesystem`)
-            const { stream } = await config.destinationFileSystem.write(`${dirname}/${path.basename(file)}`);
-            await (new Promise((accept, reject) => {
-              const input = fse.createReadStream(file)
-                .on('end', accept)
-                .on('error', reject)
+            const destination = `${dirname}/${path.basename(file)}`;
+            console.log(`Uploading '${destination}' to filesystem`);
+            let tries = 10;
+            let done = false;
 
-              stream.on('error', reject);
-              input.pipe(stream);
-            }));
+            while(tries > 0 && !done) {
+              try {
+                await upload(file, destination);
+                done = true;
+              } catch (e) {
+                tries--;
+
+                console.info(`Retrying ${destination} (${e.toString()}`);
+                // wait for 2 seconds and try again
+                await (new Promise(accept => setTimeout(accept, 2000)));
+              }
+            }
+            if (!done) {
+              throw `Unable to upload ${destination}`;
+            }
           } else {
             console.log(`Uploading ${config.assetManager.url}${destinationPrefix}/${path.basename(file)}`);
             await rp(`${config.assetManager.url}${destinationPrefix}/${path.basename(file)}`, {
@@ -179,20 +200,22 @@ module.exports = app => {
               auth: config.assetManager.auth
             });
           }
+        }
 
-        }));
-      }
+        if (job.hlsEncKey) {
+          await fse.writeFile(`${tmpDir}/file.key`, Buffer.from(job.hlsEncKey, 'hex'));
+        }
 
-      if (job.hlsEncKey) {
-        await fse.writeFile(`${tmpDir}/file.key`, Buffer.from(job.hlsEncKey, 'hex'));
-      }
+        app.socket.emit('m3u8', {
+          filename: job.m3u8,
+          ffprobe: await ffprobe(`${tmpDir}/${filename}`)
+        });
 
-      app.socket.emit('m3u8', {
-        filename: job.m3u8,
-        ffprobe: await ffprobe(`${tmpDir}/${filename}`)
-      });
-
-      await fse.remove(tmpDir);
+        await fse.remove(tmpDir);
+      })()
+        .catch(e => {
+          console.error(e);
+        });
     });
     response({success: true});
 
