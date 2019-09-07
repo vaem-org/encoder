@@ -67,7 +67,7 @@
 
 "@vaem/filesystem@https://github.com/vaem-org/filesystem.git":
   version "1.0.0"
-  resolved "https://github.com/vaem-org/filesystem.git#cd45c3b78392efef9e635de3988d292b8a6f003b"
+  resolved "https://github.com/vaem-org/filesystem.git#b35d876e3af987a33fc544b27caf1e46cbcd4b5d"
   dependencies:
     "@azure/storage-blob" "^10.4.0"
     aws-sdk "^2.510.0"

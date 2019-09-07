@@ -76,7 +76,7 @@ async function upload(source, destination) {
 
     stream
       .on('error', reject)
-      .on('end', accept)
+      .on('done', accept)
     ;
 
     input.pipe(stream);
