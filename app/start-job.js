@@ -106,7 +106,7 @@ module.exports = app => {
       pass: job.options.pass
     });
 
-    const tmpDir = `${config.root}/tmp/segments/${path.basename(job.m3u8)}`;
+    const tmpDir = `${config.root}/tmp/segments/${path.basename(job.m3u8).replace('%v', 'v')}`;
     await fse.ensureDir(tmpDir);
     const filename = path.basename(job.m3u8);
 
@@ -209,9 +209,18 @@ module.exports = app => {
           await fse.writeFile(`${tmpDir}/file.key`, Buffer.from(job.hlsEncKey, 'hex'));
         }
 
+        const filenames = await glob(`${tmpDir}/*.m3u8`, {nodir: true});
+
+        const ffprobes = [];
+
+        for(let file of filenames) {
+          ffprobes.push(await ffprobe(file));
+        }
+
         app.socket.emit('m3u8', {
           filename: job.m3u8,
-          ffprobe: await ffprobe(`${tmpDir}/${filename}`)
+          filenames,
+          ffprobes
         });
 
         await fse.remove(tmpDir);

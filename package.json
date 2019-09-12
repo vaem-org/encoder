@@ -13,7 +13,7 @@
     "url": "ssh://molengraft.com:222/git/encoder.git"
   },
   "author": "Wouter van de Molengraft",
-  "license": "UNLICENSED",
+  "license": "GPL-3.0-only",
   "dependencies": {
     "@vaem/filesystem": "https://github.com/vaem-org/filesystem.git",
     "dotenv": "^8.1.0",
