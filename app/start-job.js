@@ -239,4 +239,8 @@ module.exports = app => {
     startJob(job, response)
       .catch(e => console.error(e));
   });
+
+  app.socket.on('stop', () => {
+    child.kill();
+  });
 };
