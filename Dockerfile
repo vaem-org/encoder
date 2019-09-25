@@ -9,11 +9,7 @@ COPY package.json /app/package.json
 COPY yarn.lock /app/yarn.lock
 
 ENV NODE_ENV=production
-RUN yarn install
-
-RUN cd node_modules/@vaem/filesystem && NODE_ENV=development yarn && rm -r node_modules
-
-RUN yarn cache clean
+RUN yarn install && yarn cache clean
 
 COPY . /app
 

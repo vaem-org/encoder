@@ -161,7 +161,7 @@ module.exports = app => {
           app.socket.emit('state', {
             status: 'error'
           });
-          return;
+          return;p
         }
 
         app.socket.emit('state', {

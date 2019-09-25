@@ -23,7 +23,7 @@ const fs = require('fs-extra');
 const os = require('os');
 const { Tail } = require('tail');
 const _ = require('lodash');
-const { fileSystemFromURL } = require('@vaem/filesystem');
+const { fileSystemFromURL } = require('@vaem-util/filesystem');
 
 let socket = false;
 const ip = false;

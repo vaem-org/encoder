@@ -15,7 +15,7 @@
   "author": "Wouter van de Molengraft",
   "license": "GPL-3.0-only",
   "dependencies": {
-    "@vaem/filesystem": "https://github.com/vaem-org/filesystem.git",
+    "@vaem-util/filesystem": "^1.0.0",
     "dotenv": "^8.1.0",
     "express": "^4.17.1",
     "fs-extra": "^8.1.0",
