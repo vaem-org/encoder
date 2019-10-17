@@ -95,7 +95,7 @@ module.exports = app => {
       '-loglevel', 'error',
       '-threads', 0,
       '-progress', `${app.config.root}/tmp/progress.log`,
-      '-hls_segment_filename', `${tmpDir}/${filename.replace(/\.m3u8$/, '.%05d.ts')}`,
+      '-hls_segment_filename', `${tmpDir}/${job.segmentFilename}`,
       `${tmpDir}/${filename}`
     ];
 
