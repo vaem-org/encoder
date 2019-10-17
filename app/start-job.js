@@ -102,36 +102,24 @@ module.exports = app => {
       'source': _.isArray(source) ? source[0] : source,
       parameters: job.videoParameters,
       width: job.width,
-      bitrate: job.options.maxrate,
-      pass: job.options.pass
+      bitrate: job.bitrate,
     });
 
     const tmpDir = `${config.root}/tmp/segments/${path.basename(job.m3u8).replace('%v', 'v')}`;
     await fse.ensureDir(tmpDir);
     const filename = path.basename(job.m3u8);
 
-    const params = _.extend({},
-      typeof job.options.seekable !== 'undefined' ? {
-        'seekable': job.options.seekable
-      } : {}, {
-        'ss': job.options.ss || null,
-        'i': source,
-        'y': true,
-        'loglevel': 'error',
-        'threads': 0,
-        'progress': `${app.config.root}/tmp/progress.log`,
+    const arguments = [
+      ...job.arguments,
+      '-y',
+      '-loglevel', 'error',
+      '-threads', 0,
+      '-progress', `${app.config.root}/tmp/progress.log`,
+      '-hls_segment_filename', `${tmpDir}/${filename.replace(/\.m3u8$/, '.%05d.ts')}`,
+      `${tmpDir}/${filename}`
+    ];
 
-      }, _.omit(job.options, ['ss', 'seekable']), {
-        'f': 'hls',
-        'hls_list_size': 0,
-        'hls_playlist_type': 'vod',
-        'hls_time': 2,
-        'hls_segment_filename': `${tmpDir}/${filename.replace(/\.m3u8$/, '.%05d.ts')}`
-      }, job.segmentOptions || {});
-
-    const arguments = getParams(params).concat(`${tmpDir}/${filename}`);
-
-    console.log('Starting ffmpeg with ', arguments.join(' '));
+    console.log('ffmpeg ', arguments.map(value => `'${value}'`).join(' '));
 
     child = child_process.spawn(
       'ffmpeg',
@@ -151,88 +139,88 @@ module.exports = app => {
       status: 'running'
     });
 
-    child.on('close', code => {
-      (async () => {
-        child = null;
-        console.log('Child process ended');
-
-        if (code !== 0) {
-          console.log('ffmpeg failed');
-          app.socket.emit('state', {
-            status: 'error'
-          });
-          return;
-        }
-
-        app.socket.emit('state', {
-          status: 'idle'
-        });
-
-        // upload segments
-        const files = await glob(`${tmpDir}/*`, {nodir: true});
-        const destinationPrefix = path.dirname(job.m3u8);
-
-        for(let file of files) {
-          if (config.destinationFileSystem) {
-            const dirname = path.basename(destinationPrefix);
-            const destination = `${dirname}/${path.basename(file)}`;
-            console.log(`Uploading '${destination}' to filesystem`);
-            let tries = 10;
-            let done = false;
-
-            while(tries > 0 && !done) {
-              try {
-                await upload(file, destination);
-                done = true;
-              } catch (e) {
-                tries--;
-
-                console.info(`Retrying ${destination} (${e.toString()}`);
-                // wait for 2 seconds and try again
-                await (new Promise(accept => setTimeout(accept, 2000)));
-              }
-            }
-            if (!done) {
-              throw `Unable to upload ${destination}`;
-            }
-          } else {
-            console.log(`Uploading ${config.assetManager.url}${destinationPrefix}/${path.basename(file)}`);
-            await rp(`${config.assetManager.url}${destinationPrefix}/${path.basename(file)}`, {
-              method: 'PUT',
-              body: fse.createReadStream(file),
-              auth: config.assetManager.auth
-            });
-          }
-        }
-
-        if (job.hlsEncKey) {
-          await fse.writeFile(`${tmpDir}/file.key`, Buffer.from(job.hlsEncKey, 'hex'));
-        }
-
-        const filenames = await glob(`${tmpDir}/*.m3u8`, {nodir: true});
-
-        const ffprobes = [];
-
-        for(let file of filenames) {
-          ffprobes.push(await ffprobe(file));
-        }
-
-        app.socket.emit('m3u8', {
-          filename: job.m3u8,
-          filenames,
-          ffprobes
-        });
-
-        await fse.remove(tmpDir);
-      })()
-        .catch(e => {
-          console.error(e);
-        });
-    });
     response({success: true});
 
     app.initializeWatchers()
       .catch(e => console.error(e));
+
+    await (new Promise((accept, reject) => {
+      child.on('close', code => {
+        child = null;
+        if (code === 0) {
+          accept();
+        } else {
+          reject('ffmpeg failed');
+        }
+
+        app.socket.emit('state', {
+          status: 'error'
+        });
+      })
+    }));
+
+    console.log('Child process ended');
+
+    app.socket.emit('state', {
+      status: 'idle'
+    });
+
+    // upload segments
+    const files = await glob(`${tmpDir}/*`, {nodir: true});
+    const destinationPrefix = path.dirname(job.m3u8);
+
+    for(let file of files) {
+      if (config.destinationFileSystem) {
+        const dirname = path.basename(destinationPrefix);
+        const destination = `${dirname}/${path.basename(file)}`;
+        console.log(`Uploading '${destination}' to filesystem`);
+        let tries = 10;
+        let done = false;
+
+        while(tries > 0 && !done) {
+          try {
+            await upload(file, destination);
+            done = true;
+          } catch (e) {
+            tries--;
+
+            console.info(`Retrying ${destination} (${e.toString()}`);
+            // wait for 2 seconds and try again
+            await (new Promise(accept => setTimeout(accept, 2000)));
+          }
+        }
+        if (!done) {
+          throw `Unable to upload ${destination}`;
+        }
+      } else {
+        console.log(`Uploading ${config.assetManager.url}${destinationPrefix}/${path.basename(file)}`);
+        await rp(`${config.assetManager.url}${destinationPrefix}/${path.basename(file)}`, {
+          method: 'PUT',
+          body: fse.createReadStream(file),
+          auth: config.assetManager.auth
+        });
+      }
+    }
+
+    if (job.hlsEncKey) {
+      await fse.writeFile(`${tmpDir}/file.key`, Buffer.from(job.hlsEncKey, 'hex'));
+    }
+
+    const filenames = await glob(`${tmpDir}/*.m3u8`, {nodir: true});
+
+    const ffprobes = [];
+
+    for(let file of filenames) {
+      ffprobes.push(await ffprobe(file));
+    }
+
+    app.socket.emit('m3u8', {
+      filename: job.m3u8,
+      filenames,
+      ffprobes
+    });
+
+    await fse.remove(tmpDir);
   };
 
   app.socket.on('new-job', (job, response) => {
@@ -241,6 +229,8 @@ module.exports = app => {
   });
 
   app.socket.on('stop', () => {
-    child.kill();
+    if (child) {
+      child.kill();
+    }
   });
 };
