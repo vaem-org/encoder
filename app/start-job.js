@@ -24,34 +24,14 @@ const fse = require('fs-extra');
 const rp = require('request-promise');
 const config = require('../config/config');
 
-/**
- * Convert an associative array to a flat array for passing as arguments to ffmpeg
- * @param params
- */
-const getParams = params => {
-  const result = [];
-  _.each(params, (value, key) => {
-    if (value !== null) {
-      (typeof value === 'object' ? value : [value]).forEach(value => {
-        result.push('-' + key);
-        if (value !== true) {
-          result.push(value);
-        }
-      });
-    }
-  });
-
-  return result;
-};
-
 const ffprobe = filename => new Promise((accept, reject) => {
-  child_process.execFile('ffprobe', getParams({
-    v: 'quiet',
-    print_format: 'json',
-    show_format: true,
-    show_streams: true,
-    allowed_extensions: 'ALL'
-  }).concat([filename]), (err, stdout) => {
+  child_process.execFile('ffprobe', [
+    '-v', 'quiet',
+    '-print_format', 'json',
+    '-show_format',
+    '-show_streams',
+    '-allowed_extensions', 'ALL',
+    filename], (err, stdout) => {
     if (err) {
       return reject(err);
     }
