@@ -196,6 +196,7 @@ module.exports = app => {
 
     app.socket.emit('m3u8', {
       filename: job.m3u8,
+      asset: job.asset,
       filenames,
       ffprobes
     });
