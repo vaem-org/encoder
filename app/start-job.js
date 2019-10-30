@@ -146,6 +146,7 @@ module.exports = app => {
     });
 
     // upload segments
+    app.uploading = true;
     const files = await glob(`${tmpDir}/*`, {nodir: true});
     const destinationPrefix = path.dirname(job.m3u8);
 
@@ -205,6 +206,9 @@ module.exports = app => {
     });
 
     await fse.remove(tmpDir);
+
+    app.uploading = false;
+    app.events.emit('done-uploading');
   };
 
   app.socket.on('new-job', (job, response) => {

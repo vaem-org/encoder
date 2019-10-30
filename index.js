@@ -24,6 +24,7 @@ const os = require('os');
 const { Tail } = require('tail');
 const _ = require('lodash');
 const { fileSystemFromURL } = require('@vaem-util/filesystem');
+const { EventEmitter } = require('events');
 
 let socket = false;
 const ip = false;
@@ -32,8 +33,10 @@ let start = false;
 config.instancePrefix = process.env.INSTANCE_PREFIX || '';
 let encoderId = null;
 
-const app = {};
-app.config = config;
+const app = {
+  config,
+  events: new EventEmitter()
+};
 
 socket = app.socket = require('socket.io-client')(`${config.assetManager.parsedUrl.origin}/encoder`, {
   path: config.assetManager.parsedUrl.pathname + (config.assetManager.parsedUrl.pathname.endsWith('/') ? '' : '/')+ 'socket.io'
@@ -43,7 +46,7 @@ socket.on('connect', () => {
   console.log('Connected to asset manager');
 
   socket.emit('request-encoder-id', {
-    encoderId: encoderId,
+    encoderId,
     token: config.assetManager.parsedUrl.username
   }, data => {
     if (!data) {
@@ -58,7 +61,7 @@ socket.on('connect', () => {
     console.log(`Using encoder id: ${data.encoderId}`);
 
     socket.emit('info', {
-      ip: ip,
+      ip,
       cpus: os.cpus(),
       hostname: os.hostname(),
       priority: parseInt(process.env.PRIORITY) || config.priority || 0
@@ -68,7 +71,13 @@ socket.on('connect', () => {
 
 let tail = null;
 
-socket.on('quit', () => {
+socket.on('quit', async () => {
+  if (app.uploading) {
+    console.log('Waiting for upload to complete');
+    await (new Promise(accept => app.events.once('done-uploading', accept)));
+    console.log('Done');
+  }
+
   socket.disconnect();
   if (tail) {
     tail.unwatch();
