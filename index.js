@@ -70,7 +70,9 @@ let tail = null;
 
 socket.on('quit', () => {
   socket.disconnect();
-  tail.unwatch();
+  if (tail) {
+    tail.unwatch();
+  }
 });
 
 app.updateCurrentlyProcessing = data => {
