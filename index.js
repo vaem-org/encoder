@@ -19,11 +19,10 @@
 require('dotenv').config();
 
 const config = require('./config/config');
-const fs = require('fs-extra');
+const fs = require('fs');
 const os = require('os');
 const { Tail } = require('tail');
 const _ = require('lodash');
-const { fileSystemFromURL } = require('@vaem-util/filesystem');
 const { EventEmitter } = require('events');
 
 let socket = false;
@@ -56,7 +55,6 @@ socket.on('connect', () => {
 
     encoderId = data.encoderId;
     config.instancePrefix = `encoder.${encoderId}.`;
-    config.destinationFileSystem = data.destinationFileSystem ? fileSystemFromURL(data.destinationFileSystem) : null;
 
     console.log(`Using encoder id: ${data.encoderId}`);
 
@@ -110,8 +108,11 @@ app.initializeWatchers = async () => {
 
   const filename = `${config.root}/tmp/progress.log`;
 
-  if (!await fs.exists(filename)) {
-    await fs.writeFile(filename, '');
+  try {
+    await fs.promises.access(filename);
+  }
+  catch (e) {
+    await fs.promises.writeFile(filename, '');
   }
 
   tail = new Tail(filename);
