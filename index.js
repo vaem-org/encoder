@@ -29,7 +29,6 @@ let socket = false;
 const ip = false;
 
 let start = false;
-config.instancePrefix = process.env.INSTANCE_PREFIX || '';
 let encoderId = null;
 
 const app = {
@@ -54,7 +53,6 @@ socket.on('connect', () => {
     }
 
     encoderId = data.encoderId;
-    config.instancePrefix = `encoder.${encoderId}.`;
 
     console.log(`Using encoder id: ${data.encoderId}`);
 
@@ -70,12 +68,6 @@ socket.on('connect', () => {
 let tail = null;
 
 socket.on('quit', async () => {
-  if (app.uploading) {
-    console.log('Waiting for upload to complete');
-    await (new Promise(accept => app.events.once('done-uploading', accept)));
-    console.log('Done');
-  }
-
   socket.disconnect();
   if (tail) {
     tail.unwatch();
@@ -102,7 +94,7 @@ const throttledEmit = _.throttle((event, params) => {
 }, 250);
 
 app.initializeWatchers = async () => {
-  if (config.instancePrefix === watchersInitialized) {
+  if (watchersInitialized) {
     return;
   }
 
@@ -134,7 +126,7 @@ app.initializeWatchers = async () => {
       });
     }
   });
-  watchersInitialized = config.instancePrefix;
+  watchersInitialized = true;
 };
 
 if (fs.existsSync(`${config.root}/tmp/progress.log`)) {
