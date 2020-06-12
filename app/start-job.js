@@ -16,8 +16,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-const _ = require('lodash');
-const child_process = require('child_process');
+const { isArray } = require('lodash');
+const { spawn } = require('child_process');
 
 module.exports = app => {
   let child = null;
@@ -35,7 +35,7 @@ module.exports = app => {
     console.log(`Starting job for ${job.m3u8}`);
 
     app.updateCurrentlyProcessing({
-      'source': _.isArray(source) ? source[0] : source,
+      'source': isArray(source) ? source[0] : source,
       parameters: job.videoParameters,
       width: job.width,
       bitrate: job.bitrate,
@@ -51,7 +51,7 @@ module.exports = app => {
 
     console.log('ffmpeg ', arguments.map(value => `'${value}'`).join(' '));
 
-    child = child_process.spawn(
+    child = spawn(
       'ffmpeg',
       arguments,
       {

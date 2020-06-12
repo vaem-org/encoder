@@ -19,16 +19,18 @@
 require('dotenv').config();
 
 const config = require('./config/config');
-const fs = require('fs');
+const { access, mkdirSync, existsSync, writeFile } = require('fs');
+const { promisify } = require('util');
 const os = require('os');
 const { Tail } = require('tail');
-const _ = require('lodash');
+const { throttle } = require('lodash');
+
+const [_access, _writeFile] = [access, writeFile].map(promisify);
 
 let socket = false;
 const ip = false;
 
 let start = false;
-config.instancePrefix = process.env.INSTANCE_PREFIX || '';
 let encoderId = null;
 
 process.env.PATH = `/opt/ffmpeg/bin:${process.env.PATH}`;
@@ -54,7 +56,6 @@ socket.on('connect', () => {
     }
 
     encoderId = data.encoderId;
-    config.instancePrefix = `encoder.${encoderId}.`;
 
     console.log(`Using encoder id: ${data.encoderId}`);
 
@@ -78,9 +79,10 @@ socket.on('quit', async () => {
 
 app.updateCurrentlyProcessing = data => {
   try {
-    socket.emit('currently-processing', _.extend(data, {
+    socket.emit('currently-processing', {
+      ...data,
       time: (new Date()).getTime()
-    }));
+    });
   }
   catch (e) {
     console.log(e);
@@ -91,22 +93,22 @@ app.updateCurrentlyProcessing = data => {
 
 let watchersInitialized = false;
 
-const throttledEmit = _.throttle((event, params) => {
+const throttledEmit = throttle((event, params) => {
   socket.emit(event, params);
 }, 250);
 
 app.initializeWatchers = async () => {
-  if (config.instancePrefix === watchersInitialized) {
+  if (watchersInitialized) {
     return;
   }
 
   const filename = `${config.root}/tmp/progress.log`;
 
   try {
-    await fs.promises.access(filename);
+    await _access(filename);
   }
   catch (e) {
-    await fs.promises.writeFile(filename, '');
+    await _writeFile(filename, '');
   }
 
   tail = new Tail(filename);
@@ -128,16 +130,16 @@ app.initializeWatchers = async () => {
       });
     }
   });
-  watchersInitialized = config.instancePrefix;
+  watchersInitialized = true;
 };
 
-if (fs.existsSync(`${config.root}/tmp/progress.log`)) {
+if (existsSync(`${config.root}/tmp/progress.log`)) {
   app.initializeWatchers()
     .catch(e => console.error(e));
 }
 
-if (!fs.existsSync(`${config.root}/tmp`)) {
-  fs.mkdirSync(`${config.root}/tmp`);
+if (!existsSync(`${config.root}/tmp`)) {
+  mkdirSync(`${config.root}/tmp`);
 }
 
 require('./app/start-job')(app);
