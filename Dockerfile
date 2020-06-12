@@ -1,7 +1,4 @@
-FROM jrottenberg/ffmpeg:4.2-alpine
-FROM node:10.16.2-alpine
-
-COPY --from=0 / /
+FROM vaem/node-ffmpeg:12.18.0-alpine
 
 WORKDIR /app
 

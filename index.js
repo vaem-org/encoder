@@ -23,7 +23,6 @@ const fs = require('fs');
 const os = require('os');
 const { Tail } = require('tail');
 const _ = require('lodash');
-const { EventEmitter } = require('events');
 
 let socket = false;
 const ip = false;
@@ -32,9 +31,10 @@ let start = false;
 config.instancePrefix = process.env.INSTANCE_PREFIX || '';
 let encoderId = null;
 
+process.env.PATH = `/opt/ffmpeg/bin:${process.env.PATH}`;
+
 const app = {
-  config,
-  events: new EventEmitter()
+  config
 };
 
 socket = app.socket = require('socket.io-client')(`${config.assetManager.parsedUrl.origin}/encoder`, {
@@ -70,12 +70,6 @@ socket.on('connect', () => {
 let tail = null;
 
 socket.on('quit', async () => {
-  if (app.uploading) {
-    console.log('Waiting for upload to complete');
-    await (new Promise(accept => app.events.once('done-uploading', accept)));
-    console.log('Done');
-  }
-
   socket.disconnect();
   if (tail) {
     tail.unwatch();

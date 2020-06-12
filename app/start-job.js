@@ -57,7 +57,8 @@ module.exports = app => {
       {
         stdio: 'inherit',
         env: {
-          'PATH': process.env.PATH
+          'PATH': process.env.PATH,
+          'LD_LIBRARY_PATH': '/opt/ffmpeg/lib:/opt/ffmpeg/lib64'
         },
         detached: true
       }
@@ -89,18 +90,18 @@ module.exports = app => {
       })
     }));
 
-    console.log('Child process ended');
-
-    app.socket.emit('state', {
-      status: 'idle'
-    });
-
     app.socket.emit('m3u8', {
       filename: job.m3u8,
       asset: job.asset,
       bitrate: job.bitrate,
       codec: job.codec,
       bandwidth: job.bandwidth
+    });
+
+    console.log('Child process ended');
+
+    app.socket.emit('state', {
+      status: 'idle'
     });
   };
 
