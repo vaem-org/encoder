@@ -24,6 +24,7 @@ const { promisify } = require('util');
 const os = require('os');
 const { Tail } = require('tail');
 const { throttle } = require('lodash');
+const uploadQueue = require('./app/upload-queue');
 
 const [_access, _writeFile] = [access, writeFile].map(promisify);
 
@@ -75,6 +76,7 @@ socket.on('quit', async () => {
   if (tail) {
     tail.unwatch();
   }
+  uploadQueue.stop();
 });
 
 app.updateCurrentlyProcessing = data => {
@@ -143,3 +145,5 @@ if (!existsSync(`${config.root}/tmp`)) {
 }
 
 require('./app/start-job')(app);
+
+uploadQueue.watch();

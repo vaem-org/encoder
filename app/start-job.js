@@ -18,6 +18,9 @@
 
 const { isArray } = require('lodash');
 const { spawn } = require('child_process');
+const { URL } = require('url');
+const { dirname } = require('path');
+const { ensureDir } = require('fs-extra');
 
 module.exports = app => {
   let child = null;
@@ -41,8 +44,17 @@ module.exports = app => {
       bitrate: job.bitrate,
     });
 
+    const replaceUrl = url => {
+      const parsed = new URL(url);
+      return `${app.config.root}/tmp/${encodeURIComponent(`${parsed.protocol}//${parsed.host}`)}${parsed.pathname}`;
+    };
+
+    const output = replaceUrl(job.arguments.pop());
+    await ensureDir(dirname(output));
+
     const arguments = [
-      ...job.arguments,
+      ...job.arguments.map((value, i) => ['-hls_segment_filename'].includes(job.arguments[i-1]) ? replaceUrl(value) : value),
+      output,
       '-y',
       '-loglevel', 'error',
       '-threads', 0,
@@ -59,12 +71,9 @@ module.exports = app => {
         env: {
           'PATH': process.env.PATH,
           'LD_LIBRARY_PATH': '/opt/ffmpeg/lib:/opt/ffmpeg/lib64'
-        },
-        detached: true
+        }
       }
     );
-
-    child.unref();
 
     app.socket.emit('state', {
       status: 'running'
@@ -82,11 +91,11 @@ module.exports = app => {
           accept();
         } else {
           reject('ffmpeg failed');
-        }
 
-        app.socket.emit('state', {
-          status: 'error'
-        });
+          app.socket.emit('state', {
+            status: 'idle'
+          });
+        }
       })
     }));
 
