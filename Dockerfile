@@ -1,4 +1,5 @@
-FROM vaem/node-ffmpeg:12.18.0-alpine
+ARG TAG=12.18.0-alpine
+FROM vaem/node-ffmpeg:${TAG}
 
 WORKDIR /app
 
