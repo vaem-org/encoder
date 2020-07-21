@@ -67,13 +67,20 @@ module.exports = app => {
       'ffmpeg',
       arguments,
       {
-        stdio: 'inherit',
+        stdio: ['inherit', 'pipe', 'pipe'],
         env: {
           'PATH': process.env.PATH,
           'LD_LIBRARY_PATH': '/opt/ffmpeg/lib:/opt/ffmpeg/lib64'
         }
       }
     );
+
+    ['stdout', 'stderr'].forEach(pipe => {
+      child[pipe].on('data', data => {
+        process[pipe].write(data);
+        app.socket.emit(pipe, data);
+      });
+    });
 
     app.socket.emit('state', {
       status: 'running'
