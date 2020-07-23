@@ -18,9 +18,6 @@
 
 const { isArray } = require('lodash');
 const { spawn } = require('child_process');
-const { URL } = require('url');
-const { dirname } = require('path');
-const { ensureDir } = require('fs-extra');
 
 module.exports = app => {
   let child = null;
@@ -44,17 +41,8 @@ module.exports = app => {
       bitrate: job.bitrate,
     });
 
-    const replaceUrl = url => {
-      const parsed = new URL(url);
-      return `${app.config.root}/tmp/${encodeURIComponent(`${parsed.protocol}//${parsed.host}`)}${parsed.pathname}`;
-    };
-
-    const output = replaceUrl(job.arguments.pop());
-    await ensureDir(dirname(output));
-
     const arguments = [
-      ...job.arguments.map((value, i) => ['-hls_segment_filename'].includes(job.arguments[i-1]) ? replaceUrl(value) : value),
-      output,
+      ...job.arguments,
       '-y',
       '-loglevel', 'error',
       '-threads', 0,
