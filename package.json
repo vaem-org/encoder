@@ -15,7 +15,7 @@
   "author": "Wouter van de Molengraft",
   "license": "GPL-3.0-only",
   "dependencies": {
-    "axios": "^0.19.2",
+    "axios": "^0.21.1",
     "chokidar": "^3.4.0",
     "dotenv": "^8.1.0",
     "fs-extra": "^9.0.1",
