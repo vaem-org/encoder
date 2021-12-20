@@ -1,29 +1,20 @@
 {
   "name": "encoder",
-  "version": "0.0.1",
-  "description": "Scripts for encoding videos to HLS ",
-  "main": "index.js",
+  "version": "1.0.0",
+  "main": "src/index.js",
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": "^16.13.0"
+  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node index.js",
-    "dev": "nodemon index.js"
+    "dev": "nodemon -w src src/index.js"
   },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/vaem-org/encoder.git"
-  },
-  "author": "Wouter van de Molengraft",
-  "license": "GPL-3.0-only",
   "dependencies": {
-    "axios": "^0.19.2",
-    "chokidar": "^3.4.0",
-    "dotenv": "^8.1.0",
-    "fs-extra": "^9.0.1",
-    "lodash": "^4.17.15",
-    "socket.io-client": "^2.2.0",
-    "tail": "^2.0.3"
+    "dotenv": "^10.0.0",
+    "socket.io-client": "^4.3.2"
   },
   "devDependencies": {
-    "nodemon": "^2.0.4"
+    "nodemon": "^2.0.14"
   }
 }

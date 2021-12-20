@@ -1,5 +1,6 @@
-node_modules
 .idea
-output
-tmp
+node_modules
 .env
+.git
+/var
+docker-compose*.yml

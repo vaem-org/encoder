@@ -1,14 +1,15 @@
-ARG TAG=12.18.0-alpine
-FROM vaem/node-ffmpeg:${TAG}
+FROM vaem/node-ffmpeg:16.13.0-alpine as base
 
 WORKDIR /app
 
-COPY package.json /app/package.json
-COPY yarn.lock /app/yarn.lock
+ADD ./package.json ./yarn.lock /app/
 
 ENV NODE_ENV=production
-RUN yarn install && yarn cache clean
 
-COPY . /app
+RUN yarn install --production
 
-CMD ["npm", "start"]
+ADD . /app
+
+USER 1000
+
+CMD ["node", "src/index.js"]
