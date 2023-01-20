@@ -31,12 +31,6 @@ socket.on('connect', () => {
   }
 });
 
-socket.on('new-job', () => {
-  if (!child) {
-    socket.emit('ready');
-  }
-});
-
 socket.on('stop', () => {
   if (child) {
     child.kill();
