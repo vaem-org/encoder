@@ -37,6 +37,12 @@ socket.on('stop', () => {
   }
 });
 
+socket.on('new-job', () => {
+  if (!child) {
+    socket.emit('ready');
+  }
+});
+
 socket.on('job', ({ job, ffmpegArguments }, callback) => {
   if (!child) {
     const input = ffmpegArguments[ffmpegArguments.indexOf('-i')+1];
@@ -88,6 +94,8 @@ socket.on('job', ({ job, ffmpegArguments }, callback) => {
         });
       }
     });
+    callback(child !== null);
+  } else {
+    callback(false);
   }
-  callback(child !== null);
 });
