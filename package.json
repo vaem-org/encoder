@@ -5,16 +5,18 @@
   "type": "module",
   "license": "MIT",
   "engines": {
-    "node": "^16.13.0"
+    "node": "^20.11.1"
   },
   "scripts": {
     "dev": "nodemon -w src src/index.js"
   },
   "dependencies": {
-    "dotenv": "^16.0.3",
-    "socket.io-client": "^4.5.4"
+    "socket.io-client": "^4.8.3"
   },
   "devDependencies": {
-    "nodemon": "^2.0.20"
-  }
+    "@nuxt/eslint-config": "^1.15.2",
+    "@types/node": "^24.12.2",
+    "eslint": "^10.3.0"
+  },
+  "packageManager": "pnpm@10.28.1+sha512.7d7dbbca9e99447b7c3bf7a73286afaaf6be99251eb9498baefa7d406892f67b879adb3a1d7e687fc4ccc1a388c7175fbaae567a26ab44d1067b54fcb0d6a316"
 }

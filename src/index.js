@@ -1,6 +1,6 @@
 /*
  * VAEM - Asset manager
- * Copyright (C) 2021  Wouter van de Molengraft
+ * Copyright (C) 2026  Wouter van de Molengraft
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,86 +16,87 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import 'dotenv/config';
-import { spawn } from 'child_process';
-import { createInterface } from 'readline';
-import { io } from 'socket.io-client';
+import { spawn } from 'node:child_process'
+import { createInterface } from 'node:readline'
+import { io } from 'socket.io-client'
 
-const socket = io(process.env.ASSETMANAGER_URL);
+const socket = io(process.env.ASSETMANAGER_URL)
 
-let child = null;
+let child = null
 
 socket.on('connect', () => {
   if (!child) {
-    socket.emit('ready');
+    socket.emit('ready')
   }
-});
+})
 
 socket.on('stop', () => {
   if (child) {
-    child.kill();
+    child.kill()
   }
-});
+})
 
 socket.on('new-job', () => {
   if (!child) {
-    socket.emit('ready');
+    socket.emit('ready')
   }
-});
+})
 
 socket.on('job', ({ job, ffmpegArguments }, callback) => {
   if (!child) {
-    const input = ffmpegArguments[ffmpegArguments.indexOf('-i')+1];
+    const input = ffmpegArguments[ffmpegArguments.indexOf('-i') + 1]
     console.log(`Processing ${input}`)
-    const errors = [];
+    const errors = []
 
     child = spawn('ffmpeg', [
       '-v', 'error',
       '-progress', 'pipe:1',
-      ...ffmpegArguments
+      ...ffmpegArguments,
     ], {
-      stdio: ['ignore', 'pipe', 'pipe']
-    });
+      stdio: ['ignore', 'pipe', 'pipe'],
+    })
 
     const readline = createInterface({
-      input: child.stdout
-    });
+      input: child.stdout,
+    })
 
     readline.on('line', (line) => {
-      const [key, value] = line.split('=');
+      const [key, value] = line.split('=')
       if (key === 'out_time_ms') {
         socket.emit('progress', {
           job,
-          out_time_ms: value
-        });
+          out_time_ms: value,
+        })
       }
-    });
+    })
 
-    child.stderr.on('data', buf => {
-      errors.push(buf);
-      process.stderr.write(buf);
-    });
+    child.stderr.on('data', (buf) => {
+      errors.push(buf)
+      process.stderr.write(buf)
+    })
 
     child.on('error', (err) => {
-      socket.emit('error', err);
-    });
+      socket.emit('error', err)
+    })
 
-    child.on('close', code => {
-      child = null;
+    child.on('close', (code) => {
+      child = null
       if (code === 0) {
         socket.emit('done', {
-          job
-        });
-        socket.emit('ready');
-      } else {
+          job,
+        })
+        socket.emit('ready')
+      }
+      else {
         socket.emit('error', {
           job,
-          stderr: Buffer.concat(errors).toString()
-        });
+          stderr: Buffer.concat(errors).toString(),
+        })
       }
-    });
-    callback(child !== null);
-  } else {
-    callback(false);
+    })
+    callback(child !== null)
   }
-});
+  else {
+    callback(false)
+  }
+})

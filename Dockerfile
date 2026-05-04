@@ -1,12 +1,14 @@
-FROM vaem/node-ffmpeg:16.13.0-alpine as base
+FROM vaem/node-ffmpeg:20.11.1-alpine AS base
 
 WORKDIR /app
 
-ADD ./package.json ./yarn.lock /app/
+RUN corepack enable
+
+ADD ./package.json ./pnpm-lock.yaml ./pnpm-workspace.yaml /app/
 
 ENV NODE_ENV=production
 
-RUN yarn install --production
+RUN pnpm install --production
 
 ADD . /app
 
